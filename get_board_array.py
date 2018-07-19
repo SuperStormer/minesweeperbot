@@ -24,10 +24,12 @@ def get_cell_type(cell):
 def get_board_array():
 	with mss.mss() as sct:
 		screenshot=sct.grab(sct.monitors[0])
+		
 		img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')
 		board=img.crop((384,111,1044,463))
+		board.save("temp/board.png")
 	width,height=board.size
 	cell_imgs=[board.crop((i,j,i+CELL_SIZE,j+CELL_SIZE)) for j in range(0,height,CELL_SIZE) for i in range(0,width,CELL_SIZE)]
 	#take the color from (15,16) and identify number based on color 
-	cells=np.fromiter((get_cell_type(cell) for cell in cell_imgs),int)
+	cells=np.fromiter((get_cell_type(cell) for cell in cell_imgs),dtype=np.int8)
 	return np.reshape(cells,(16,30))

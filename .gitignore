@@ -1,2 +1,4 @@
 temp
 __pycache__
+.mypy_cache
+minesweeperonline.com
