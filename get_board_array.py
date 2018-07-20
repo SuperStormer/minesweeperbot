@@ -19,14 +19,13 @@ def get_cell_type(cell):
 	if cell_type == 0 and cell.getpixel((1,16)) != (255,255,255):
 		cell_type=-1
 	return cell_type
-	
-	
+
 def get_board_array():
 	with mss.mss() as sct:
 		screenshot=sct.grab(sct.monitors[0])
-		
 		img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')
-		board=img.crop((384,111,1044,463))
+		#board=img.crop((384,111,1044,463))
+		
 		board.save("temp/board.png")
 	width,height=board.size
 	cell_imgs=[board.crop((i,j,i+CELL_SIZE,j+CELL_SIZE)) for j in range(0,height,CELL_SIZE) for i in range(0,width,CELL_SIZE)]
