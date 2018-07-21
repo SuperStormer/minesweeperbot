@@ -2,7 +2,7 @@ import mss
 import numpy as np
 from PIL import Image
 
-CELL_SIZE=22
+CELL_SIZE=20
 color_codes={
 		(0, 0, 255): 1,
 		(0, 123, 0): 2,
@@ -25,7 +25,7 @@ def get_board_array():
 		screenshot=sct.grab(sct.monitors[0])
 		img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')
 		#board=img.crop((384,111,1044,463))
-		
+		board=img.crop((13,101,613,421))
 		board.save("temp/board.png")
 	width,height=board.size
 	cell_imgs=[board.crop((i,j,i+CELL_SIZE,j+CELL_SIZE)) for j in range(0,height,CELL_SIZE) for i in range(0,width,CELL_SIZE)]
