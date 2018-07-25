@@ -41,7 +41,7 @@ def add_mines(cell_surrondings:CellSurrondings):
 	if len(empty_cells) == get_effective_mines(cell_surrondings):
 		for indices in empty_cells:
 			mines[cell_surrondings.get_cell_coordinates(indices)[::-1]]=True
-	
+
 def get_safe(cell_surrondings:CellSurrondings)->Iterator[Tuple[int,int]]:
 	#there are no more unmarked mines
 	if get_effective_mines(cell_surrondings)==0:
