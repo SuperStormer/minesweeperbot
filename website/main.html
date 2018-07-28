@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<!--taken from http://minesweeperonline.com-->
 	<meta charset="utf-8" />
 	<meta name="google" content="notranslate"> <!-- prevent google from getting confused by foreign high scores names -->
 	<meta http-equiv="Content-Language" content="en">
@@ -41,7 +42,7 @@
 		$('#zoom' + zoom).attr('checked', true);
 		$('#position-' + position).attr('checked', true);
 		$('#nightMode').attr('checked', isNightMode);
-
+		$("#win").hide()
 		document.getElementById('game-container').className = 'z' + zoom;
 		setPosition(position);
 
@@ -55,11 +56,9 @@
 			[ 2, 16, 54],
 			[ 1, 10, 45]
 		], readOptions);
-
-		
-
-		
-
+		minesweeper.onWin = function(gameTypeId, time){
+			$("#win").show()
+		}
 		minesweeper.newGame();
 		setHash();
 
@@ -252,7 +251,11 @@
 		}
 	});
 	</script>
-
+	<style>
+		#win{
+			background-color:red
+		}
+	</style>
 </head>
 
 <body>
@@ -370,7 +373,8 @@
 				</tr>
 			</table>
 		</div>
-
+		<div id="win">         <br>       <br>       <br></div>
+		<div>taken from http://minesweeperonline.com</div>
 		<!-- <div id="message"><strong>NEW!</strong> To play with dark, low-contrast colors at night, enable "Night Mode" in the Display settings.</div> -->
 
 		<div id="share">

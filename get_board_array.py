@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 
 CELL_SIZE=20
-color_codes={
+COLOR_CODES={
 		(0, 0, 255): 1,
 		(0, 123, 0): 2,
 		(255, 0, 0): 3,
@@ -16,7 +16,7 @@ color_codes={
 	} 
 def get_cell_type(cell):
 	#cell_type=color_codes[cell.getpixel((15,16))]
-	cell_type=color_codes[cell.getpixel((13,14))]
+	cell_type=COLOR_CODES[cell.getpixel((13,14))]
 	if cell_type == 0 and cell.getpixel((1,16)) != (255,255,255):
 		cell_type=-1
 	return cell_type

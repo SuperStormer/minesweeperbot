@@ -14,7 +14,6 @@ class CellSurrondings:
         return np.vstack([np.flip(indices,axis=0) for indices in np.transpose(np.nonzero(self.cell_surrondings==0))])#needs to reverse to return in x,y pairs
         
     def __iter__(self):
-
         return self.cell_surrondings
     def __repr__(self):
         return "CellSurrondings({0!r})".format(self.__dict__)

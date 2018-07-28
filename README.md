@@ -1,5 +1,5 @@
 # minesweeper-bot
 It's a program that solves minesweeper on a custom minesweeper website.
  
-## Usage:
+## Usage
 	python bot.py
