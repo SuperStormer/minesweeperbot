@@ -1,0 +1,5 @@
+numpy==1.15.0
+typing==3.6.2
+pynput==1.4
+mss==3.2.1
+Pillow==5.2.0

@@ -2,7 +2,9 @@ import mss
 import numpy as np
 from PIL import Image
 
-CELL_SIZE=20
+CELL_SIZE=22
+BOARD_X=14
+BOARD_Y=111
 COLOR_CODES={
 		(0, 0, 255): 1,
 		(0, 123, 0): 2,
@@ -14,19 +16,19 @@ COLOR_CODES={
 		(123, 123, 123): 8,
 		(189, 189, 189): 0#unopened/opSened blank 
 	} 
-def get_cell_type(cell):
-	#cell_type=color_codes[cell.getpixel((15,16))]
-	cell_type=COLOR_CODES[cell.getpixel((13,14))]
+def get_cell_type(cell)->int:
+	cell_type=COLOR_CODES[cell.getpixel((15,16))]
+	#cell_type=COLOR_CODES[cell.getpixel((13,14))]
 	if cell_type == 0 and cell.getpixel((1,16)) != (255,255,255):
 		cell_type=-1
 	return cell_type
 
-def get_board_array():
+def get_board_array()->np.ndarray:
 	with mss.mss() as sct:
 		screenshot=sct.grab(sct.monitors[0])
 		img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')
 		#board=img.crop((384,111,1044,463))
-		board=img.crop((13,101,613,421))
+		board=img.crop((BOARD_X,BOARD_Y,BOARD_X+CELL_SIZE*30,BOARD_Y+CELL_SIZE*16))
 		board.save("temp/board.png")
 	width,height=board.size
 	cell_imgs=[board.crop((i,j,i+CELL_SIZE,j+CELL_SIZE)) for j in range(0,height,CELL_SIZE) for i in range(0,width,CELL_SIZE)]
