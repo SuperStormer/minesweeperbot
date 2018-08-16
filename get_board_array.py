@@ -6,16 +6,16 @@ CELL_SIZE=22
 BOARD_X=14
 BOARD_Y=111
 COLOR_CODES={
-		(0, 0, 255): 1,
-		(0, 123, 0): 2,
-		(255, 0, 0): 3,
-		(0, 0, 123): 4,
-		(123, 0, 0): 5,
-		(0, 123, 123): 6,
-		(0, 0, 0): 7,
-		(123, 123, 123): 8,
-		(189, 189, 189): 0#unopened/opSened blank 
-	} 
+	(0, 0, 255): 1,
+	(0, 123, 0): 2,
+	(255, 0, 0): 3,
+	(0, 0, 123): 4,
+	(123, 0, 0): 5,
+	(0, 123, 123): 6,
+	(0, 0, 0): 7,
+	(123, 123, 123): 8,
+	(189, 189, 189): 0#unopened/opened blank 
+} 
 def get_cell_type(cell)->int:
 	cell_type=COLOR_CODES[cell.getpixel((15,16))]
 	#cell_type=COLOR_CODES[cell.getpixel((13,14))]
