@@ -1,15 +1,15 @@
 from typing import Tuple
 
 import numpy as np
-
+#IMPORTANT:indexing is [y,x] not [x,y]
 class CellSurrondings:
-	def __init__(self,cell_surrondings:np.ndarray,cell_x:int,cell_y:int):
-		self.cell_surrondings=cell_surrondings
-		self.cell_x=cell_x
-		self.cell_y=cell_y
+	def __init__(self,x:int,y:int,cells:np.ndarray):
+		self.cell_surrondings=cells[y:y+3,x:x+3]
+		self.x=x
+		self.y=y
 	def get_cell_coordinates(self,indices:np.ndarray)->Tuple[int,int]:
 		if 0<=indices[0]<=2 and 0<=indices[1]<=2:
-			return self.cell_x+indices[0]-1,self.cell_y+indices[1]-1
+			return self.x+indices[0]-1,self.y+indices[1]-1
 		raise IndexError()	
 	def get_empty_cells(self)->np.ndarray:
 		#returns in x,y pairs
