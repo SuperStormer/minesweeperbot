@@ -2,3 +2,4 @@ temp
 __pycache__
 .mypy_cache
 .vscode
+.coverage
