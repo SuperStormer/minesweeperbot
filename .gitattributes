@@ -1,1 +1,4 @@
 website/* linguist-vendored
+*.pyd linguist-generated=true
+*.c linguist-generated=true
+*.o linguist-generated=true

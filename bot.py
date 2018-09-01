@@ -42,10 +42,10 @@ def get_effective_mines(cell_surrondings:CellSurrondings)->int:
 	is_mine=is_mine_factory(cell_surrondings)
 	#get the number of mines around the cell
 	cell_mine_count=cell_surrondings.cell_surrondings[1,1]
-	return cell_mine_count-[is_mine(indices) for indices in cell_surrondings.get_empty_cells()].count(True)
+	return cell_mine_count-[is_mine(indices) for indices in cell_surrondings.empty_cells].count(True)
 
 def add_mines(cell_surrondings:CellSurrondings):
-	empty_cells:List[Tuple[int,int]]=list(filter(is_safe_cell_factory(cell_surrondings),cell_surrondings.get_empty_cells()))
+	empty_cells:List[Tuple[int,int]]=list(filter(is_safe_cell_factory(cell_surrondings),cell_surrondings.empty_cells))
 	#if there are the same amount of unopened squares as the effective number of mines, they are all mines
 	if len(empty_cells) == get_effective_mines(cell_surrondings):
 		for indices in empty_cells:
@@ -55,7 +55,7 @@ def get_safe(cell_surrondings:CellSurrondings)->Optional[Iterator[Tuple[int,int]
 	#there are no more unmarked mines
 	if get_effective_mines(cell_surrondings)==0:
 		is_safe_cell=is_safe_cell_factory(cell_surrondings)
-		return (cell_surrondings.get_cell_coordinates(indices) for indices in cell_surrondings.get_empty_cells() if is_safe_cell(indices))
+		return (cell_surrondings.get_cell_coordinates(indices) for indices in cell_surrondings.empty_cells if is_safe_cell(indices))
 	return None
 def normal_solver(cells:np.ndarray):
 	#add mines first
@@ -82,19 +82,16 @@ def is_border(cell_surrondings:CellSurrondings)->bool:
 	touches_opened_cell =(cell_surrondings.cell_surrondings>0).any()
 	return is_unopened and not is_mine and touches_opened_cell
 def is_valid_flagging(flags:Tuple[bool,...],region:np.ndarray,cells:np.ndarray)->bool:
-	flag_coords=[region[index[0]] for index in np.transpose(np.nonzero(flags))]
-	if len(np.transpose(mines.nonzero()))+len(flag_coords)<=99:#99 is number of mines
-		for y,row in enumerate(cells[1:-1]):
-			for x,cell in enumerate(row[1:-1]):
-				#check for every surronding square if it is valid flagging
-				if cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords):
-					return False
-	return True	
+	flag_coords=[region[index] for index in np.nonzero(flags)[0]]
+	if len(mines.nonzero()[0])+len(flag_coords)<=99:#99 is number of mines
+		#not any of them are invalid
+		return not any(cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1]))
+	return False	
 #returns if the flagging is valid per square(even if there is no flagging)
 #TODO:reimplement this
 def is_valid_flagging_single(cell_surrondings:CellSurrondings,flag_coords:np.ndarray):
 	flag_coords_tuples:Iterator[Tuple[int,int]]=map(tuple,flag_coords) # type: ignore
-	num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords_tuples for indices in cell_surrondings.get_empty_cells()].count(True)
+	num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords_tuples for indices in cell_surrondings.empty_cells].count(True)
 	return num_proposed_flagging == get_effective_mines(cell_surrondings)
 def get_solution(args):
 	flags,region,cells=args
@@ -109,11 +106,9 @@ def tank_solver(cells:np.ndarray)->bool:
 	segregated_regions=[np.transpose((labels==i).nonzero()) for i in range(1,num_labels+1)]
 	clicked_safe=False
 	for region in segregated_regions:#also indexed [y,x]
-		solutions:List[Tuple[int,...]]=[]
-		for flags in itertools.product([False,True],repeat=len(region)):#True is yes flag
-			if is_valid_flagging(flags,region,cells):
-				solutions.append(flags)
-		"""flag_permutations=itertools.product([False,True],repeat=len(region))
+		flag_permutations=itertools.product([False,True],repeat=len(region))
+		solutions:List[Tuple[int,...]]=[flags for flags in flag_permutations if is_valid_flagging(flags,region,cells) if is_valid_flagging(flags,region,cells)]
+		"""
 		with Pool() as pool:
 			solutions=[x for x in pool.imap_unordered(get_solution,zip(flag_permutations,itertools.repeat(region),itertools.repeat(cells)),15)]
 		"""
@@ -128,6 +123,7 @@ def tank_solver(cells:np.ndarray)->bool:
 			click_cell(*cell)
 			clicked_safe=True
 	return clicked_safe
+
 
 def guess(cells:np.ndarray):
 	x=randint(0,29)
@@ -164,6 +160,6 @@ def main():
 			screenshot=sct.grab(sct.monitors[0])
 			img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')
 			is_win=img.getpixel((30,480))==(255,0,0)		
-		sleep(0.1)	
+		sleep(0.05)	
 if __name__=="__main__":
 	main()
