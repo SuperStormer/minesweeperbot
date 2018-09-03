@@ -21,7 +21,7 @@ from get_board_array import get_board_array
 mouse=MouseController()
 keyboard=KeyboardController()
 mines=np.full((16,30),False) #IMPORTANT:0th axis is y, 1st axis is x so indexing is mines[y,x] not mines[x,y]
-def is_mine(cell_surrondings:CellSurrondings,indices:np.ndarray)->bool:
+cdef is_mine(cell_surrondings,indices):
 	coordinates=cell_surrondings.get_cell_coordinates(indices)
 	if 0<=coordinates[0]<=29 and 0<=coordinates[1]<=15:
 		return mines[coordinates[::-1]]
@@ -36,7 +36,7 @@ def is_safe_cell_factory(cell_surrondings:CellSurrondings)->Callable[[np.ndarray
 def click_cell(x:int,y:int):
 	mouse.position=(20+x*22,115+y*22)
 	mouse.click(Button.left)
-def get_effective_mines(cell_surrondings:CellSurrondings)->int:
+cdef int get_effective_mines(cell_surrondings):
 	#get the number of mines around the cell
 	cell_mine_count=cell_surrondings.cell_surrondings[1,1]
 	return cell_mine_count-[is_mine(cell_surrondings,indices) for indices in cell_surrondings.empty_cells].count(True)
@@ -73,22 +73,28 @@ def normal_solver(cells:np.ndarray):
 						click_cell(*safe_cell)
 						clicked_safe=True
 	return clicked_safe	
-def is_border(cell_surrondings:CellSurrondings)->bool:
+cdef bint is_border(cell_surrondings):
 	is_unopened=cell_surrondings.cell_surrondings[1,1]== 0
 	is_mine=mines[cell_surrondings.y,cell_surrondings.x] 
 	touches_opened_cell =(cell_surrondings.cell_surrondings>0).any()
 	return is_unopened and not is_mine and touches_opened_cell
-def is_valid_flagging(flags:Tuple[bool,...],region:np.ndarray,cells:np.ndarray)->bool:
+cpdef bint is_valid_flagging(flags,region,cells):
 	flag_coords=[region[index] for index in np.nonzero(flags)[0]]
 	if len(mines.nonzero()[0])+len(flag_coords)<=99:#99 is number of mines
+		for y,row in enumerate(cells[1:-1]):
+				for x,cell in enumerate(row[1:-1]):
+					#check for every surronding square if it is valid flagging
+					if cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords):
+						return False
+		return True 				
 		#not any of them are invalid
-		return not any(cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1]))
+		#return not any(cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1]))
 	return False	
 #returns if the flagging is valid per square(even if there is no flagging)
 #TODO:reimplement this
-def is_valid_flagging_single(cell_surrondings:CellSurrondings,flag_coords:np.ndarray)->bool:
+cdef bint is_valid_flagging_single(cell_surrondings,flag_coords):
 	flag_coords_tuples:Iterator[Tuple[int,int]]=map(tuple,flag_coords) # type: ignore
-	num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords_tuples for indices in cell_surrondings.empty_cells].count(True)
+	cdef int num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords_tuples for indices in cell_surrondings.empty_cells].count(True)
 	return num_proposed_flagging == get_effective_mines(cell_surrondings)
 def get_solution(args):
 	flags,region,cells=args
