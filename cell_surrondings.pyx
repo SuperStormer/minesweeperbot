@@ -7,7 +7,7 @@ cdef class CellSurrondings:
 	cdef public int x
 	cdef public int y
 	cdef public empty_cells
-	cpdef __init__(self,int x,int y,cells):
+	def __init__(self,int x,int y,cells):
 		self.cell_surrondings=cells[y:y+3,x:x+3]
 		self.x=x
 		self.y=y
@@ -20,5 +20,5 @@ cdef class CellSurrondings:
 	def __iter__(self):
 		return iter(self.cell_surrondings)
 	def __repr__(self):
-		return "CellSurrondings({0!r})".format(self.__dict__)
+		return "CellSurrondings(cell_surrondings={0!r},x={1},y={2})".format(self.cell_surrondings,self.x,self.y)
 

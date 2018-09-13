@@ -1,3 +1,4 @@
+# cython: profile=True
 import itertools
 from multiprocessing import Pool
 from os import getcwd
@@ -14,16 +15,16 @@ from pynput.keyboard import Key
 from pynput.mouse import Button
 from pynput.mouse import Controller as MouseController
 from scipy.ndimage import label
-
+from config import BOARD_HEIGHT,BOARD_WIDTH
 from cell_surrondings import CellSurrondings
 from get_board_array import get_board_array
 
 mouse=MouseController()
 keyboard=KeyboardController()
-mines=np.full((16,30),False) #IMPORTANT:0th axis is y, 1st axis is x so indexing is mines[y,x] not mines[x,y]
+mines=np.full((BOARD_HEIGHT,BOARD_WIDTH),False) #IMPORTANT:0th axis is y, 1st axis is x so indexing is mines[y,x] not mines[x,y]
 cdef is_mine(cell_surrondings,indices):
 	coordinates=cell_surrondings.get_cell_coordinates(indices)
-	if 0<=coordinates[0]<=29 and 0<=coordinates[1]<=15:
+	if 0<=coordinates[0]<=BOARD_WIDTH-1 and 0<=coordinates[1]<=BOARD_HEIGHT-1:
 		return mines[coordinates[::-1]]
 	return False	
 
@@ -79,7 +80,7 @@ cdef bint is_border(cell_surrondings):
 	touches_opened_cell =(cell_surrondings.cell_surrondings>0).any()
 	return is_unopened and not is_mine and touches_opened_cell
 cpdef bint is_valid_flagging(flags,region,cells):
-	flag_coords=[region[index] for index in np.nonzero(flags)[0]]
+	flag_coords=[tuple(region[index])[::-1] for index in np.nonzero(flags)[0]]
 	if len(mines.nonzero()[0])+len(flag_coords)<=99:#99 is number of mines
 		for y,row in enumerate(cells[1:-1]):
 				for x,cell in enumerate(row[1:-1]):
@@ -93,8 +94,7 @@ cpdef bint is_valid_flagging(flags,region,cells):
 #returns if the flagging is valid per square(even if there is no flagging)
 #TODO:reimplement this
 cdef bint is_valid_flagging_single(cell_surrondings,flag_coords):
-	flag_coords_tuples:Iterator[Tuple[int,int]]=map(tuple,flag_coords) # type: ignore
-	cdef int num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords_tuples for indices in cell_surrondings.empty_cells].count(True)
+	cdef int num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords for indices in cell_surrondings.empty_cells].count(True)
 	return num_proposed_flagging == get_effective_mines(cell_surrondings)
 def get_solution(args):
 	flags,region,cells=args
@@ -104,7 +104,7 @@ def get_solution(args):
 			
 #TODO finish implementing this
 def tank_solver(cells:np.ndarray)->bool:
-	border_cells=np.reshape(np.fromiter((is_border(CellSurrondings(x,y,cells)) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1])),dtype=bool),(16,30))
+	border_cells=np.reshape(np.fromiter((is_border(CellSurrondings(x,y,cells)) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1])),dtype=bool),(BOARD_HEIGHT,BOARD_WIDTH))
 	labels,num_labels=label(border_cells)
 	segregated_regions=[np.transpose((labels==i).nonzero()) for i in range(1,num_labels+1)]
 	clicked_safe=False
@@ -121,16 +121,16 @@ def tank_solver(cells:np.ndarray)->bool:
 		#all of the cells that are always not mines in the solutions
 		safe_cells=(region[i] for i,is_safe in enumerate(np.apply_along_axis(lambda x:not x.any(),0,stacked_solutions)) if is_safe)
 		for cell in mine_cells:
-			mines[cell[::-1]]=True
+			mines[cell]=True
 		for cell in safe_cells:
-			click_cell(*cell)
+			click_cell(*cell[::-1])
 			clicked_safe=True
 	return clicked_safe
 
 
 def guess(cells:np.ndarray):
-	x=randint(0,29)
-	y=randint(0,15)
+	x=randint(0,BOARD_WIDTH-1)
+	y=randint(0,BOARD_HEIGHT-1)
 	if not mines[y,x] and cells[y,x]== 0:
 		click_cell(x,y)
 	else:
@@ -150,7 +150,7 @@ def main():
 	keyboard.press(Key.f11)
 	keyboard.release(Key.f11)
 	sleep(3)
-	click_cell(14,7)
+	click_cell(round((BOARD_WIDTH-1)/2),round((BOARD_HEIGHT-1)/2))
 	is_win=False
 	while not is_win:
 		cells=get_board_array()

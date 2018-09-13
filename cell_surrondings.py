@@ -16,5 +16,5 @@ class CellSurrondings:
 	def __iter__(self):
 		return iter(self.cell_surrondings)
 	def __repr__(self):
-		return "CellSurrondings({0!r})".format(self.__dict__)
+		return "CellSurrondings(cell_surrondings={0!r},x={1},y={2})".format(self.cell_surrondings,self.x,self.y)
 

@@ -1,6 +1,8 @@
 temp
 __pycache__
 .mypy_cache
+.pytest_cache
+.pylintrc
 .vscode
 .coverage
 *.pyd

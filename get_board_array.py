@@ -1,7 +1,7 @@
 import mss
 import numpy as np
 from PIL import Image
-
+from config import BOARD_HEIGHT,BOARD_WIDTH
 CELL_SIZE=22
 BOARD_X=14
 BOARD_Y=111
@@ -28,14 +28,13 @@ def get_board_array()->np.ndarray:
 		screenshot=sct.grab(sct.monitors[0])
 		img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')
 		#board=img.crop((384,111,1044,463))
-		board=img.crop((BOARD_X,BOARD_Y,BOARD_X+CELL_SIZE*30,BOARD_Y+CELL_SIZE*16))
+		board=img.crop((BOARD_X,BOARD_Y,BOARD_X+CELL_SIZE*BOARD_WIDTH,BOARD_Y+CELL_SIZE*BOARD_HEIGHT))
 	width,height=board.size
 	cell_imgs=[board.crop((i,j,i+CELL_SIZE,j+CELL_SIZE)) for j in range(0,height,CELL_SIZE) for i in range(0,width,CELL_SIZE)]
-	#take the color from (15,16) and identify number based on color 
 	cells=np.fromiter((get_cell_type(cell) for cell in cell_imgs),dtype=np.int8)
-	grid=np.reshape(cells,(16,30))
+	grid=np.reshape(cells,(BOARD_HEIGHT,BOARD_WIDTH))
 	#surrond grid with -1(so you can make cell_surrondings with no errors)
 	return np.concatenate((
-		np.full((1,32),-1,dtype=np.int8),#top row of -1
-		np.insert(grid,(0,30),-1,axis=1),#fill sides with -1
-		np.full((1,32),-1,dtype=np.int8)))#bottom row of -1
+		np.full((1,BOARD_WIDTH+2),-1,dtype=np.int8),#top row of -1
+		np.insert(grid,(0,BOARD_WIDTH),-1,axis=1),#fill sides with -1
+		np.full((1,BOARD_WIDTH+2),-1,dtype=np.int8)))#bottom row of -1
