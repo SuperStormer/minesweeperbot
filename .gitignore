@@ -2,7 +2,7 @@ temp
 __pycache__
 .mypy_cache
 .pytest_cache
-.pylintrc
+.hypothesis
 .vscode
 .coverage
 *.pyd

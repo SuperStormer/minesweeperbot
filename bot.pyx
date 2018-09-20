@@ -42,14 +42,14 @@ cdef int get_effective_mines(cell_surrondings):
 	cell_mine_count=cell_surrondings.cell_surrondings[1,1]
 	return cell_mine_count-[is_mine(cell_surrondings,indices) for indices in cell_surrondings.empty_cells].count(True)
 
-def add_mines(cell_surrondings:CellSurrondings):
+cdef add_mines(cell_surrondings):
 	empty_cells:List[Tuple[int,int]]=list(filter(is_safe_cell_factory(cell_surrondings),cell_surrondings.empty_cells))
 	#if there are the same amount of unopened squares as the effective number of mines, they are all mines
 	if len(empty_cells) == get_effective_mines(cell_surrondings):
 		for indices in empty_cells:
 			mines[cell_surrondings.get_cell_coordinates(indices)[::-1]]=True
 
-def get_safe(cell_surrondings:CellSurrondings)->Optional[Iterator[Tuple[int,int]]]:
+cdef get_safe(cell_surrondings):
 	#there are no more unmarked mines
 	if get_effective_mines(cell_surrondings)==0:
 		is_safe_cell=is_safe_cell_factory(cell_surrondings)
@@ -79,6 +79,7 @@ cdef bint is_border(cell_surrondings):
 	is_mine=mines[cell_surrondings.y,cell_surrondings.x] 
 	touches_opened_cell =(cell_surrondings.cell_surrondings>0).any()
 	return is_unopened and not is_mine and touches_opened_cell
+#FIXME
 cpdef bint is_valid_flagging(flags,region,cells):
 	flag_coords=[tuple(region[index])[::-1] for index in np.nonzero(flags)[0]]
 	if len(mines.nonzero()[0])+len(flag_coords)<=99:#99 is number of mines
@@ -92,8 +93,7 @@ cpdef bint is_valid_flagging(flags,region,cells):
 		#return not any(cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1]))
 	return False	
 #returns if the flagging is valid per square(even if there is no flagging)
-#TODO:reimplement this
-cdef bint is_valid_flagging_single(cell_surrondings,flag_coords):
+cpdef bint is_valid_flagging_single(cell_surrondings,flag_coords):
 	cdef int num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords for indices in cell_surrondings.empty_cells].count(True)
 	return num_proposed_flagging == get_effective_mines(cell_surrondings)
 def get_solution(args):
@@ -102,7 +102,6 @@ def get_solution(args):
 		return flags
 	return None	
 			
-#TODO finish implementing this
 def tank_solver(cells:np.ndarray)->bool:
 	border_cells=np.reshape(np.fromiter((is_border(CellSurrondings(x,y,cells)) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1])),dtype=bool),(BOARD_HEIGHT,BOARD_WIDTH))
 	labels,num_labels=label(border_cells)
