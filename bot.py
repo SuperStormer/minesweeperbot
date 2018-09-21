@@ -1,5 +1,4 @@
 import itertools
-from multiprocessing import Pool
 from os import getcwd
 from random import randint
 from subprocess import Popen
@@ -21,9 +20,8 @@ from get_board_array import get_board_array
 
 mouse = MouseController()
 keyboard = KeyboardController()
-mines = np.full(
-    (BOARD_HEIGHT, BOARD_WIDTH), False
-)  #IMPORTANT:0th axis is y, 1st axis is x so indexing is mines[y,x] not mines[x,y]
+#IMPORTANT:0th axis is y, 1st axis is x so indexing is mines[y,x] not mines[x,y]
+mines = np.full((BOARD_HEIGHT, BOARD_WIDTH), False)
 
 def is_mine(cell_surrondings: CellSurrondings, indices: np.ndarray) -> bool:
 	coordinates = cell_surrondings.get_cell_coordinates(indices)
@@ -60,7 +58,7 @@ def get_safe(cell_surrondings: CellSurrondings) -> Optional[Iterator[Tuple[int, 
 	if get_effective_mines(cell_surrondings) == 0:
 		is_safe_cell = is_safe_cell_factory(cell_surrondings)
 		return (
-		    cell_surrondings.get_cell_coordinates(indices) for indices in cell_surrondings.empty_cells if is_safe_cell(indices)
+			cell_surrondings.get_cell_coordinates(indices) for indices in cell_surrondings.empty_cells if is_safe_cell(indices)
 		)
 	return None
 
@@ -105,22 +103,16 @@ def is_valid_flagging(flags: Tuple[bool, ...], region: np.ndarray, cells: np.nda
 #returns if the flagging is valid per square(even if there is no flagging)
 def is_valid_flagging_single(cell_surrondings: CellSurrondings, flag_coords: List[Tuple[int, int]]) -> bool:
 	num_proposed_flagging = [
-	    cell_surrondings.get_cell_coordinates(indices) in flag_coords for indices in cell_surrondings.empty_cells
+		cell_surrondings.get_cell_coordinates(indices) in flag_coords for indices in cell_surrondings.empty_cells
 	].count(True)
 	return num_proposed_flagging == get_effective_mines(cell_surrondings)
 
-def get_solution(args):
-	flags, region, cells = args
-	if is_valid_flagging(flags, region, cells):
-		return flags
-	return None
-
 def tank_solver(cells: np.ndarray) -> bool:
 	border_cells = np.reshape(
-	    np.fromiter(
-	        (is_border(CellSurrondings(x, y, cells)) for y, row in enumerate(cells[1:-1]) for x, cell in enumerate(row[1:-1])),
-	        dtype=bool
-	    ), (BOARD_HEIGHT, BOARD_WIDTH)
+		np.fromiter(
+		(is_border(CellSurrondings(x, y, cells)) for y, row in enumerate(cells[1:-1]) for x, cell in enumerate(row[1:-1])),
+		dtype=bool
+		), (BOARD_HEIGHT, BOARD_WIDTH)
 	)
 	labels, num_labels = label(border_cells)
 	segregated_regions = [np.transpose((labels == i).nonzero()) for i in range(1, num_labels + 1)]
@@ -128,18 +120,14 @@ def tank_solver(cells: np.ndarray) -> bool:
 	for region in segregated_regions:  #also indexed [y,x]
 		flag_permutations = itertools.product([False, True], repeat=len(region))
 		solutions: List[Tuple[int, ...]] = [flags for flags in flag_permutations if is_valid_flagging(flags, region, cells)]
-		"""
-		with Pool() as pool:
-			solutions=[x for x in pool.imap_unordered(get_solution,zip(flag_permutations,itertools.repeat(region),itertools.repeat(cells)),15)]
-		"""
 		stacked_solutions = np.vstack(solutions)
 		#all of the cells that are always mines in the solutions
 		mine_cells = (
-		    region[i] for i, is_mine in enumerate(np.apply_along_axis(lambda x: x.all(), 0, stacked_solutions)) if is_mine
+			region[i] for i, is_mine in enumerate(np.apply_along_axis(lambda x: x.all(), 0, stacked_solutions)) if is_mine
 		)
 		#all of the cells that are always not mines in the solutions
 		safe_cells = (
-		    region[i] for i, is_safe in enumerate(np.apply_along_axis(lambda x: not x.any(), 0, stacked_solutions)) if is_safe
+			region[i] for i, is_safe in enumerate(np.apply_along_axis(lambda x: not x.any(), 0, stacked_solutions)) if is_safe
 		)
 		for cell in mine_cells:
 			mines[cell] = True

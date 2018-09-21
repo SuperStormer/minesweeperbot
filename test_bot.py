@@ -30,5 +30,4 @@ def test_is_valid_flagging_single_true():
 def test_is_valid_flagging_single_false(flags):
 	assume(not np.array_equal(flags, np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1], [2, 2]])))
 	np.seterr(all='raise')
-	print(cells)
 	assert not is_valid_flagging_single(CellSurrondings(1, 1, cells), flags)
