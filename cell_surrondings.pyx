@@ -1,6 +1,8 @@
 from typing import Tuple
 
 import numpy as np
+
+#TODO use python 3.7 dataclasses
 #IMPORTANT:indexing is [y,x] not [x,y]
 cdef class CellSurrondings:
 	cdef public cell_surrondings

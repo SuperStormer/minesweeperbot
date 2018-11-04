@@ -1,6 +1,5 @@
 # cython: profile=True
 import itertools
-from multiprocessing import Pool
 from os import getcwd
 from random import randint
 from subprocess import Popen
@@ -18,7 +17,7 @@ from scipy.ndimage import label
 from config import BOARD_HEIGHT,BOARD_WIDTH
 from cell_surrondings import CellSurrondings
 from get_board_array import get_board_array
-
+#TODO use pyautogui instead of mss and pynput
 mouse=MouseController()
 keyboard=KeyboardController()
 mines=np.full((BOARD_HEIGHT,BOARD_WIDTH),False) #IMPORTANT:0th axis is y, 1st axis is x so indexing is mines[y,x] not mines[x,y]
@@ -32,7 +31,7 @@ cdef is_mine(cell_surrondings,indices):
 #TODO:replace this with operator.not on is_mine
 def is_safe_cell_factory(cell_surrondings:CellSurrondings)->Callable[[np.ndarray],bool]:
 	def is_safe_cell(indices:np.ndarray)->bool:
-		return not is_mine(cell_surrondings,indices)# and cell_surrondings.cell_surrondings[tuple(indices)] != -1
+		return not is_mine(cell_surrondings,indices)
 	return is_safe_cell	
 def click_cell(x:int,y:int):
 	mouse.position=(20+x*22,115+y*22)
@@ -79,7 +78,7 @@ cdef bint is_border(cell_surrondings):
 	is_mine=mines[cell_surrondings.y,cell_surrondings.x] 
 	touches_opened_cell =(cell_surrondings.cell_surrondings>0).any()
 	return is_unopened and not is_mine and touches_opened_cell
-#FIXME
+
 cpdef bint is_valid_flagging(flags,region,cells):
 	flag_coords=[tuple(region[index])[::-1] for index in np.nonzero(flags)[0]]
 	if len(mines.nonzero()[0])+len(flag_coords)<=99:#99 is number of mines
@@ -89,19 +88,12 @@ cpdef bint is_valid_flagging(flags,region,cells):
 					if cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords):
 						return False
 		return True 				
-		#not any of them are invalid
-		#return not any(cell>0 and not is_valid_flagging_single(CellSurrondings(x,y,cells),flag_coords) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1]))
-	return False	
+	return False
+#FIXME
 #returns if the flagging is valid per square(even if there is no flagging)
 cpdef bint is_valid_flagging_single(cell_surrondings,flag_coords):
 	cdef int num_proposed_flagging=[cell_surrondings.get_cell_coordinates(indices) in flag_coords for indices in cell_surrondings.empty_cells].count(True)
 	return num_proposed_flagging == get_effective_mines(cell_surrondings)
-def get_solution(args):
-	flags,region,cells=args
-	if is_valid_flagging(flags,region,cells):
-		return flags
-	return None	
-			
 def tank_solver(cells:np.ndarray)->bool:
 	border_cells=np.reshape(np.fromiter((is_border(CellSurrondings(x,y,cells)) for y,row in enumerate(cells[1:-1]) for x,cell in enumerate(row[1:-1])),dtype=bool),(BOARD_HEIGHT,BOARD_WIDTH))
 	labels,num_labels=label(border_cells)
@@ -110,18 +102,21 @@ def tank_solver(cells:np.ndarray)->bool:
 	for region in segregated_regions:#also indexed [y,x]
 		flag_permutations=itertools.product([False,True],repeat=len(region))
 		solutions:List[Tuple[int,...]]=[flags for flags in flag_permutations if is_valid_flagging(flags,region,cells)]
-		"""
-		with Pool() as pool:
-			solutions=[x for x in pool.imap_unordered(get_solution,zip(flag_permutations,itertools.repeat(region),itertools.repeat(cells)),15)]
-		"""
-		stacked_solutions=np.vstack(solutions)		
+		try:
+			stacked_solutions = np.vstack(solutions)
+		except ValueError:
+			print("border cells:",border_cells)
+			print("cells:",cells)
+			print("region:",region)
+			raise
 		#all of the cells that are always mines in the solutions
-		mine_cells=(region[i] for i,is_mine in enumerate(np.apply_along_axis(lambda x:x.all(),0,stacked_solutions)) if is_mine)
+		mine_cells=(tuple(region[i]) for i,is_mine in enumerate(np.apply_along_axis(lambda x:x.all(),0,stacked_solutions)) if is_mine)
 		#all of the cells that are always not mines in the solutions
-		safe_cells=(region[i] for i,is_safe in enumerate(np.apply_along_axis(lambda x:not x.any(),0,stacked_solutions)) if is_safe)
+		safe_cells=(tuple(region[i]) for i,is_safe in enumerate(np.apply_along_axis(lambda x:not x.any(),0,stacked_solutions)) if is_safe)
 		for cell in mine_cells:
 			mines[cell]=True
 		for cell in safe_cells:
+			print("Clicked:"+str(cell[::-1]))
 			click_cell(*cell[::-1])
 			clicked_safe=True
 	return clicked_safe
@@ -153,11 +148,12 @@ def main():
 	is_win=False
 	while not is_win:
 		cells=get_board_array()
-		clicked_safe=normal_solver(cells)
-		if not clicked_safe:
-			clicked_safe=tank_solver(cells)
-			if not clicked_safe:
+		normal_clicked_safe=normal_solver(cells)
+		if not normal_clicked_safe:
+			tank_clicked_safe=tank_solver(cells)
+			if not tank_clicked_safe:
 				guess(cells[1:-1,1:-1])
+		#TODO check if cells has no unopened cells instead of this		
 		with mss.mss() as sct:
 			screenshot=sct.grab(sct.monitors[0])
 			img = Image.frombytes('RGB', screenshot.size, screenshot.bgra, 'raw', 'BGRX')

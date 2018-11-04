@@ -1,6 +1,7 @@
-mss==3.2.1
-numpy==1.15.1
+mss==3.3.1
+numpy==1.15.2
 pynput==1.4
 scipy==1.1.0
-typing==3.6.2
-Pillow==5.2.0
+Pillow==5.3.0
+pyutils==0.1
+typing==3.6.6

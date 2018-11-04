@@ -1,13 +1,18 @@
 from typing import Tuple
 
 import numpy as np
+from dataclasses import dataclass, InitVar
 
+#TODO use python 3.7 dataclasses
 #IMPORTANT:indexing is [y,x] not [x,y]
+@dataclass(frozen=True)
 class CellSurrondings:
-	def __init__(self, x: int, y: int, cells: np.ndarray):
-		self.cell_surrondings = cells[y:y + 3, x:x + 3]
-		self.x = x
-		self.y = y
+	x: int
+	y: int
+	cells: InitVar[np.ndarray]
+	
+	def __post_init__(self, cells: np.ndarray):
+		self.cell_surrondings = cells[self.y:self.y + 3, self.x:self.x + 3]
 		self.empty_cells = np.transpose(np.nonzero(self.cell_surrondings == 0)[::-1])
 	
 	def get_cell_coordinates(self, indices: np.ndarray) -> Tuple[int, int]:
