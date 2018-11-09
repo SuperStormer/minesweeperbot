@@ -24,6 +24,8 @@ class MineCombinations:
 	@classmethod
 	def merge_combos(cls, combos1: MineCombinations, combos2: MineCombinations) -> MineCombinations:
 		empty_cell_intersection = combos1.empty_cells & combos2.empty_cells
+		if empty_cell_intersection == set():
+			return None
 		combined_empty_cells = combos1.empty_cells | combos2.empty_cells
 		#itertools.product(combos1, combos2)
 		valid_products = {

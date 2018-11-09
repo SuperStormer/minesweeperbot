@@ -1,7 +1,7 @@
+from dataclasses import InitVar, dataclass
 from typing import Tuple
 
 import numpy as np
-from dataclasses import dataclass, InitVar
 
 #TODO use python 3.7 dataclasses
 #IMPORTANT:indexing is [y,x] not [x,y]

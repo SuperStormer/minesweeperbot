@@ -1,10 +1,5 @@
 [MASTER]
 
-# A comma-separated list of package or module names from where C extensions may
-# be loaded. Extensions are loading into the active Python interpreter and may
-# run arbitrary code.
-extension-pkg-whitelist=
-
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use.
 jobs=0
@@ -14,21 +9,8 @@ jobs=0
 # complex, nested conditions.
 limit-inference-results=100
 
-# List of plugins (as comma separated values of python modules names) to load,
-# usually to register additional checkers.
-load-plugins=
-
 # Pickle collected data for later comparisons.
 persistent=yes
-
-# When enabled, pylint would attempt to guess common misconfiguration and emit
-# user-friendly hints instead of false-positive error messages.
-suggestion-mode=yes
-
-# Allow loading of arbitrary C extensions. Extensions are imported into the
-# active Python interpreter and may run arbitrary code.
-unsafe-load-any-extension=no
-
 
 [MESSAGES CONTROL]
 
@@ -45,7 +27,6 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-#disable=E1121,W0105,W0312,W0511,R0903,R0914,R0913,R0902,R1702,C0111,C0326,C0305,C0304,C0303,C0330,C0103
 disable=W0312,C0111,C0103,C0330,C0303
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

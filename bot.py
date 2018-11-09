@@ -155,7 +155,7 @@ def merge_solver(cells: np.ndarray):
 		MineCombinations.from_cell_surrondings(cell_surrondings, get_effective_mines(cell_surrondings))
 		for cell_surrondings in cell_surrondings_list
 	]
-	merged_combos = optional_reduce(mine_combinations, MineCombinations.merge_combos)
+	merged_combos_list = optional_reduce(mine_combinations, MineCombinations.merge_combos)
 
 def guess(cells: np.ndarray):
 	x = randint(0, BOARD_WIDTH - 1)
